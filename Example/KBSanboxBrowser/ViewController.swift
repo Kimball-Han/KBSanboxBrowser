@@ -21,30 +21,35 @@ class ViewController: UIViewController {
     }
     
     func setupUI() {
+        // Configure status label
         statusLabel.text = "Server Stopped"
+        statusLabel.textColor = .black
         statusLabel.textAlignment = .center
         statusLabel.numberOfLines = 0
-        statusLabel.frame = CGRect(x: 20, y: 100, width: view.bounds.width - 40, height: 100)
-        
-        statusLabel.isUserInteractionEnabled = true
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(copyServerURL))
-        statusLabel.addGestureRecognizer(tapGesture)
-        
+        statusLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(statusLabel)
         
+        // Configure toggle button
         toggleButton.setTitle("Start Server", for: .normal)
-        toggleButton.frame = CGRect(x: 100, y: 250, width: view.bounds.width - 200, height: 50)
+        toggleButton.translatesAutoresizingMaskIntoConstraints = false
         toggleButton.addTarget(self, action: #selector(toggleServer), for: .touchUpInside)
         view.addSubview(toggleButton)
-    }
-    
-    @objc func copyServerURL() {
-        guard let url = KBSandboxBrowser.shared.serverURL?.absoluteString else { return }
-        UIPasteboard.general.string = url
         
-        let alert = UIAlertController(title: "Copied", message: "Server URL copied to clipboard:\n\(url)", preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
-        present(alert, animated: true, completion: nil)
+        // Setup Auto Layout constraints
+        NSLayoutConstraint.activate([
+            // Status Label constraints
+            statusLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            statusLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 100),
+            statusLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            statusLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            
+            // Toggle Button constraints
+            toggleButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            toggleButton.topAnchor.constraint(equalTo: statusLabel.bottomAnchor, constant: 50),
+            toggleButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 100),
+            toggleButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -100),
+            toggleButton.heightAnchor.constraint(equalToConstant: 50)
+        ])
     }
     
     @objc func toggleServer() {

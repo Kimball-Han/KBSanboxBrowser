@@ -156,6 +156,16 @@ public class KBSandboxBrowser {
     
     private func handleDelete(path: String) -> GCDWebServerResponse {
         let fullPath = getAbsolutePath(for: path)
+        
+        // Permission check: Prevent deleting folders in root directory
+        let cleanPath = path.hasPrefix("/") ? String(path.dropFirst()) : path
+        if !cleanPath.contains("/") {
+            var isDir: ObjCBool = false
+            if FileManager.default.fileExists(atPath: fullPath, isDirectory: &isDir), isDir.boolValue {
+                return createJSONResponse(["error": "Deleting folders in root directory is not allowed"], statusCode: 403)
+            }
+        }
+        
         do {
             try FileManager.default.removeItem(atPath: fullPath)
             return createJSONResponse(["success": true])

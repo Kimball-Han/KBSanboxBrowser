@@ -191,7 +191,7 @@ onMounted(() => {
           <div class="actions">
             <a v-if="item.type === 'file'" :href="getDownloadUrl(item)" target="_blank" download>⬇️</a>
             <button v-if="item.type === 'file' && canView(item.name)" @click="viewFile(item)">👁️</button>
-            <button @click="deleteItem(item)" class="delete-btn">🗑️</button>
+            <button @click="deleteItem(item)" class="delete-btn" :disabled="currentPath === '/' && item.type === 'directory'">🗑️</button>
           </div>
         </li>
       </ul>
