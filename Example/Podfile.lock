@@ -1,0 +1,31 @@
+PODS:
+  - GCDWebServer (3.5.4):
+    - GCDWebServer/Core (= 3.5.4)
+  - GCDWebServer/Core (3.5.4)
+  - GCDWebServer/WebDAV (3.5.4):
+    - GCDWebServer/Core
+  - GCDWebServer/WebUploader (3.5.4):
+    - GCDWebServer/Core
+  - KBSanboxBrowser (0.1.0):
+    - GCDWebServer (~> 3.5)
+    - GCDWebServer/WebDAV (~> 3.5)
+    - GCDWebServer/WebUploader (~> 3.5)
+
+DEPENDENCIES:
+  - KBSanboxBrowser (from `../`)
+
+SPEC REPOS:
+  trunk:
+    - GCDWebServer
+
+EXTERNAL SOURCES:
+  KBSanboxBrowser:
+    :path: "../"
+
+SPEC CHECKSUMS:
+  GCDWebServer: 2c156a56c8226e2d5c0c3f208a3621ccffbe3ce4
+  KBSanboxBrowser: 69ec6af9fd0bd3873d7ff3b3f164c39af2978d7a
+
+PODFILE CHECKSUM: da598f8887e3c925a1ae21220a2b53831f6e9644
+
+COCOAPODS: 1.16.2

@@ -28,15 +28,25 @@ TODO: Add long description of the pod here.
   s.source           = { :git => 'https://github.com/kimball/KBSanboxBrowser.git', :tag => s.version.to_s }
   # s.social_media_url = 'https://twitter.com/<TWITTER_USERNAME>'
 
-  s.ios.deployment_target = '10.0'
+  s.ios.deployment_target = '14.0'
+
+  s.prepare_command = <<-CMD
+    if [ -d "Sanbox-Browser" ]; then
+      cd Sanbox-Browser
+      npm install
+      npm run build
+    fi
+  CMD
 
   s.source_files = 'KBSanboxBrowser/Classes/**/*'
   
-  # s.resource_bundles = {
-  #   'KBSanboxBrowser' => ['KBSanboxBrowser/Assets/*.png']
-  # }
-
+  s.resource_bundles = {
+    'KBSanboxBrowser' => ['KBSanboxBrowser/Assets/**/*', 'Sanbox-Browser/dist']
+  }
+  s.swift_version = '5.9'
   # s.public_header_files = 'Pod/Classes/**/*.h'
   # s.frameworks = 'UIKit', 'MapKit'
-  # s.dependency 'AFNetworking', '~> 2.3'
+  s.dependency 'GCDWebServer', '~> 3.5'
+  s.dependency 'GCDWebServer/WebUploader', '~> 3.5'
+  s.dependency 'GCDWebServer/WebDAV', '~> 3.5'
 end
