@@ -113,7 +113,14 @@ public class KBSandboxBrowser {
         
         do {
             let contents = try FileManager.default.contentsOfDirectory(atPath: fullPath)
-            let files = try contents.map { fileName -> [String: Any] in
+            let files = try contents.compactMap { fileName -> [String: Any]? in
+                // Permission check: Hide SystemData and .plist files in root directory
+                if path == "/" || path.isEmpty {
+                    if fileName == "SystemData" || fileName.hasSuffix(".plist") {
+                        return nil
+                    }
+                }
+                
                 let filePath = (fullPath as NSString).appendingPathComponent(fileName)
                 let attributes = try FileManager.default.attributesOfItem(atPath: filePath)
                 let type = (attributes[.type] as? FileAttributeType) == .typeDirectory ? "directory" : "file"
@@ -132,6 +139,12 @@ public class KBSandboxBrowser {
     }
     
     private func handleCreateFolder(path: String) -> GCDWebServerResponse {
+        // Permission check: Prevent creating folders in root directory
+        let cleanPath = path.hasPrefix("/") ? String(path.dropFirst()) : path
+        if !cleanPath.contains("/") {
+            return createJSONResponse(["error": "Creating folders in root directory is not allowed"], statusCode: 403)
+        }
+        
         let fullPath = getAbsolutePath(for: path)
         do {
             try FileManager.default.createDirectory(atPath: fullPath, withIntermediateDirectories: true, attributes: nil)
@@ -152,14 +165,19 @@ public class KBSandboxBrowser {
     }
     
     private func handleUpload(request: GCDWebServerMultiPartFormRequest) -> GCDWebServerResponse {
-        guard let file = request.files.first,
+        guard let file = request.files.first as? GCDWebServerMultiPartFile,
               let pathArgument = request.firstArgument(forControlName: "path"),
               let path = pathArgument.string else {
             return createJSONResponse(["error": "Invalid request"], statusCode: 400)
         }
         
+        // Permission check: Prevent uploading files to root directory
+        if path == "/" || path.isEmpty {
+            return createJSONResponse(["error": "Uploading files to root directory is not allowed"], statusCode: 403)
+        }
+        
         let fullDirPath = getAbsolutePath(for: path)
-        let fullFilePath = (fullDirPath as NSString).appendingPathComponent(file.fileName)
+        let fullFilePath = (fullDirPath as NSString).appendingPathComponent(file.fileName ?? "uploaded_file")
         
         do {
             if FileManager.default.fileExists(atPath: fullFilePath) {

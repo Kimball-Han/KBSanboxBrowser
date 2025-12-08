@@ -165,10 +165,10 @@ onMounted(() => {
       <h1>Sandbox Browser</h1>
       <div class="controls">
         <button @click="goUp" :disabled="currentPath === '/'">⬆️ Up</button>
-        <button @click="showCreateFolder = !showCreateFolder">📁 New Folder</button>
-        <label class="upload-btn">
+        <button @click="showCreateFolder = !showCreateFolder" :disabled="currentPath === '/'">📁 New Folder</button>
+        <label class="upload-btn" :class="{ disabled: currentPath === '/' }">
           📤 Upload
-          <input type="file" ref="uploadInput" @change="handleUpload" style="display: none">
+          <input type="file" ref="uploadInput" @change="handleUpload" style="display: none" :disabled="currentPath === '/'">
         </label>
       </div>
       <div class="path">Current Path: {{ currentPath }}</div>
@@ -249,6 +249,12 @@ button, .upload-btn {
 button:disabled {
   background: #ccc;
   cursor: not-allowed;
+}
+
+.upload-btn.disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .delete-btn {
