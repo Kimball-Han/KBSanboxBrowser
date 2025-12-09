@@ -124,9 +124,11 @@ public class KBSandboxBrowser {
             
             var arguments: [String: String] = [:]
             // Use URLComponents to parse the query string safely from data
+            // Replace "+" with "%20" because URLComponents expects RFC 3986 (space=%20),
+            // but application/x-www-form-urlencoded uses space=+
             if let queryString = String(data: dataRequest.data, encoding: .utf8) {
                 var components = URLComponents()
-                components.percentEncodedQuery = queryString
+                components.percentEncodedQuery = queryString.replacingOccurrences(of: "+", with: "%20")
                 components.queryItems?.forEach { item in
                     if let value = item.value {
                         arguments[item.name] = value
