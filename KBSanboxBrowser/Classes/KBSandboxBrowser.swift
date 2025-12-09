@@ -123,7 +123,8 @@ public class KBSandboxBrowser {
             let dataRequest = request as! GCDWebServerDataRequest
             
             var arguments: [String: String] = [:]
-            if let text = dataRequest.text,
+            // Manually decode data to avoid GCDWebServer crash when Content-Type is not text/*
+            if let text = String(data: dataRequest.data, encoding: .utf8),
                let components = URLComponents(string: "http://dummy.com/?" + text) {
                 components.queryItems?.forEach { item in
                     arguments[item.name] = item.value
