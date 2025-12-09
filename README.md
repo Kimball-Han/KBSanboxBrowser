@@ -23,6 +23,7 @@ KBSanboxBrowser is a powerful iOS sandbox file browser that allows you to manage
   - Video (`mp4`, `mov`, etc.)
   - PDF documents.
   - Text and Code files (`txt`, `json`, `xml`, `swift`, `js`, `log`, etc.)
+  - SQLite Databases (`db`, `sqlite`, `sqlite3`): View tables and execute SQL queries.
 - **Security & Permissions**:
   - Root directory protection: Prevents creating folders, uploading files, renaming items, or deleting folders in the sandbox root.
   - Hides sensitive system files (`SystemData`, `.plist`) in the root directory.

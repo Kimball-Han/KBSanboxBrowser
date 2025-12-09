@@ -155,14 +155,71 @@ const isPdf = (name) => /\.pdf$/i.test(name)
 const isAudio = (name) => /\.(mp3|wav|aac|m4a|ogg)$/i.test(name)
 const isVideo = (name) => /\.(mp4|mov|avi|webm|mkv)$/i.test(name)
 const isText = (name) => /\.(txt|log|json|xml|md|swift|h|m|c|cpp|js|css|html|plist)$/i.test(name)
+const isDB = (name) => /\.(db|sqlite|sqlite3)$/i.test(name)
 
 const canView = (name) => {
-  return isImage(name) || isPdf(name) || isAudio(name) || isVideo(name) || isText(name)
+  return isImage(name) || isPdf(name) || isAudio(name) || isVideo(name) || isText(name) || isDB(name)
+}
+
+// DB State
+const dbTables = ref([])
+const currentQuery = ref('')
+const dbResult = ref(null)
+const dbError = ref('')
+
+const executeSQL = async (item, sql, isTableFetch = false) => {
+  dbError.value = ''
+  if (!isTableFetch) dbResult.value = null
+  
+  const formData = new URLSearchParams()
+  formData.append('path', item.path)
+  formData.append('sql', sql)
+  
+  try {
+    const response = await fetch('/api/query_db', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: formData
+    })
+    const data = await response.json()
+    
+    if (data.error) {
+      dbError.value = data.error
+    } else {
+      if (isTableFetch) {
+        dbTables.value = data.rows.map(r => r.name)
+      } else {
+        dbResult.value = data
+      }
+    }
+  } catch (e) {
+    dbError.value = 'Network error'
+  }
+}
+
+const fetchDBTables = async (item) => {
+  const sql = "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;"
+  await executeSQL(item, sql, true)
+}
+
+const runQuery = () => {
+  if (viewingFile.value && currentQuery.value) {
+    executeSQL(viewingFile.value, currentQuery.value)
+  }
+}
+
+const selectTable = (tableName) => {
+  currentQuery.value = `SELECT * FROM ${tableName} LIMIT 100;`
+  runQuery()
 }
 
 const viewFile = async (item) => {
   viewingFile.value = item
   textContent.value = ''
+  dbTables.value = []
+  dbResult.value = null
+  currentQuery.value = ''
+  dbError.value = ''
   
   if (isText(item.name)) {
     try {
@@ -171,6 +228,8 @@ const viewFile = async (item) => {
     } catch (e) {
       textContent.value = 'Error loading text content'
     }
+  } else if (isDB(item.name)) {
+    await fetchDBTables(item)
   }
 }
 
@@ -235,6 +294,35 @@ onMounted(() => {
           <audio v-else-if="isAudio(viewingFile.name)" :src="getDownloadUrl(viewingFile)" controls></audio>
           <video v-else-if="isVideo(viewingFile.name)" :src="getDownloadUrl(viewingFile)" controls></video>
           <pre v-else-if="isText(viewingFile.name)">{{ textContent }}</pre>
+          <div v-else-if="isDB(viewingFile.name)" class="db-viewer">
+            <div class="db-sidebar">
+              <h4>Tables</h4>
+              <ul>
+                <li v-for="table in dbTables" :key="table" @click="selectTable(table)">{{ table }}</li>
+              </ul>
+            </div>
+            <div class="db-content">
+              <div class="query-box">
+                <textarea v-model="currentQuery" placeholder="Enter SQL query..."></textarea>
+                <button @click="runQuery">Run</button>
+              </div>
+              <div v-if="dbError" class="error">{{ dbError }}</div>
+              <div v-if="dbResult" class="results-table-container">
+                <table class="results-table">
+                  <thead>
+                    <tr>
+                      <th v-for="col in dbResult.columns" :key="col">{{ col }}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="(row, i) in dbResult.rows" :key="i">
+                      <td v-for="col in dbResult.columns" :key="col">{{ row[col] }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
           <div v-else>Preview not available</div>
         </div>
       </div>
@@ -419,5 +507,85 @@ button:disabled {
   margin: 0;
   white-space: pre-wrap;
   text-align: left;
+}
+
+.db-viewer {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  gap: 20px;
+}
+
+.db-sidebar {
+  width: 200px;
+  border-right: 1px solid #ddd;
+  padding-right: 10px;
+  overflow-y: auto;
+}
+
+.db-sidebar ul {
+  list-style: none;
+  padding: 0;
+}
+
+.db-sidebar li {
+  padding: 8px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.db-sidebar li:hover {
+  background: #eee;
+}
+
+.db-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.query-box {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.query-box textarea {
+  flex: 1;
+  height: 60px;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: monospace;
+}
+
+.results-table-container {
+  flex: 1;
+  overflow: auto;
+  border: 1px solid #ddd;
+}
+
+.results-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.results-table th, .results-table td {
+  padding: 8px;
+  border: 1px solid #ddd;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.results-table th {
+  background: #f5f5f5;
+  position: sticky;
+  top: 0;
+}
+
+.error {
+  color: red;
+  margin-bottom: 10px;
 }
 </style>

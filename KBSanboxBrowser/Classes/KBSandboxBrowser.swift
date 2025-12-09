@@ -1,5 +1,6 @@
 import Foundation
 import GCDWebServer
+import SQLite3
 
 public class KBSandboxBrowser {
     public static let shared = KBSandboxBrowser()
@@ -114,6 +115,24 @@ public class KBSandboxBrowser {
             let query = request.query ?? [:]
             let path = query["path"] ?? ""
             return self.handleDownload(path: path)
+        }
+        
+        // Query Database
+        webServer.addHandler(forMethod: "POST", path: "/api/query_db", request: GCDWebServerDataRequest.self) { [weak self] request in
+            guard let self = self else { return GCDWebServerResponse(statusCode: 500) }
+            let dataRequest = request as! GCDWebServerDataRequest
+            
+            var arguments: [String: String] = [:]
+            if let text = dataRequest.text,
+               let components = URLComponents(string: "http://dummy.com/?" + text) {
+                components.queryItems?.forEach { item in
+                    arguments[item.name] = item.value
+                }
+            }
+            
+            let path = arguments["path"] ?? ""
+            let sql = arguments["sql"] ?? ""
+            return self.handleQueryDB(path: path, sql: sql)
         }
     }
     
@@ -267,5 +286,63 @@ public class KBSandboxBrowser {
         } else {
             return createJSONResponse(["error": "File not found"], statusCode: 404)
         }
+    }
+    
+    private func handleQueryDB(path: String, sql: String) -> GCDWebServerResponse {
+        let fullPath = getAbsolutePath(for: path)
+        
+        var db: OpaquePointer?
+        guard sqlite3_open(fullPath, &db) == SQLITE_OK else {
+            return createJSONResponse(["error": "Could not open database"], statusCode: 500)
+        }
+        defer { sqlite3_close(db) }
+        
+        var statement: OpaquePointer?
+        guard sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK else {
+            let errorMsg = String(cString: sqlite3_errmsg(db))
+            return createJSONResponse(["error": errorMsg], statusCode: 400)
+        }
+        defer { sqlite3_finalize(statement) }
+        
+        var columns: [String] = []
+        let columnCount = sqlite3_column_count(statement)
+        for i in 0..<columnCount {
+            if let name = sqlite3_column_name(statement, i) {
+                columns.append(String(cString: name))
+            } else {
+                columns.append("Column \(i)")
+            }
+        }
+        
+        var rows: [[String: Any]] = []
+        while sqlite3_step(statement) == SQLITE_ROW {
+            var row: [String: Any] = [:]
+            for i in 0..<columnCount {
+                let name = columns[Int(i)]
+                let type = sqlite3_column_type(statement, i)
+                
+                var value: Any = NSNull()
+                switch type {
+                case SQLITE_INTEGER:
+                    value = sqlite3_column_int64(statement, i)
+                case SQLITE_FLOAT:
+                    value = sqlite3_column_double(statement, i)
+                case SQLITE_TEXT:
+                    if let text = sqlite3_column_text(statement, i) {
+                        value = String(cString: text)
+                    }
+                case SQLITE_BLOB:
+                    value = "<BLOB>"
+                case SQLITE_NULL:
+                    value = NSNull()
+                default:
+                    value = NSNull()
+                }
+                row[name] = value
+            }
+            rows.append(row)
+        }
+        
+        return createJSONResponse(["columns": columns, "rows": rows])
     }
 }
