@@ -10,7 +10,7 @@ public class KBSandboxBrowser {
     private init() {
     }
     
-    public func start(port: UInt = 8080) {
+    public func start(port: UInt = 9906) {
         guard !isRunning else { return }
         
         webServer.removeAllHandlers()
@@ -61,8 +61,17 @@ public class KBSandboxBrowser {
         webServer.addHandler(forMethod: "POST", path: "/api/delete", request: GCDWebServerURLEncodedFormRequest.self) { [weak self] request in
             guard let self = self else { return GCDWebServerResponse(statusCode: 500) }
             let formRequest = request as! GCDWebServerURLEncodedFormRequest
-            let path = formRequest.arguments["path"] ?? ""
+            let path = formRequest.arguments["path"] as? String ?? ""
             return self.handleDelete(path: path)
+        }
+        
+        // Rename File/Folder
+        webServer.addHandler(forMethod: "POST", path: "/api/rename", request: GCDWebServerURLEncodedFormRequest.self) { [weak self] request in
+            guard let self = self else { return GCDWebServerResponse(statusCode: 500) }
+            let formRequest = request as! GCDWebServerURLEncodedFormRequest
+            let path = formRequest.arguments["path"] as? String ?? ""
+            let newName = formRequest.arguments["newName"] as? String ?? ""
+            return self.handleRename(path: path, newName: newName)
         }
         
         // Upload File
@@ -148,6 +157,30 @@ public class KBSandboxBrowser {
         let fullPath = getAbsolutePath(for: path)
         do {
             try FileManager.default.createDirectory(atPath: fullPath, withIntermediateDirectories: true, attributes: nil)
+            return createJSONResponse(["success": true])
+        } catch {
+            return createJSONResponse(["error": error.localizedDescription], statusCode: 500)
+        }
+    }
+    
+    private func handleRename(path: String, newName: String) -> GCDWebServerResponse {
+        guard !path.isEmpty, !newName.isEmpty else {
+             return createJSONResponse(["error": "Invalid parameters"], statusCode: 400)
+        }
+        
+        let fullPath = getAbsolutePath(for: path)
+        
+        // Permission check: Prevent renaming items in root directory
+        let cleanPath = path.hasPrefix("/") ? String(path.dropFirst()) : path
+        if !cleanPath.contains("/") {
+             return createJSONResponse(["error": "Renaming items in root directory is not allowed"], statusCode: 403)
+        }
+
+        let parentPath = (fullPath as NSString).deletingLastPathComponent
+        let newFullPath = (parentPath as NSString).appendingPathComponent(newName)
+        
+        do {
+            try FileManager.default.moveItem(atPath: fullPath, toPath: newFullPath)
             return createJSONResponse(["success": true])
         } catch {
             return createJSONResponse(["error": error.localizedDescription], statusCode: 500)

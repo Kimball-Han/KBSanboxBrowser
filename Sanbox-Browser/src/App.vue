@@ -72,6 +72,31 @@ const createFolder = async () => {
   }
 }
 
+const renameItem = async (item) => {
+  const newName = prompt(`Rename ${item.name} to:`, item.name)
+  if (!newName || newName === item.name) return
+  
+  const formData = new URLSearchParams()
+  formData.append('path', item.path)
+  formData.append('newName', newName)
+  
+  try {
+    const response = await fetch('/api/rename', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: formData
+    })
+    const data = await response.json()
+    if (data.success) {
+      fetchFiles()
+    } else {
+      alert('Error renaming item: ' + data.error)
+    }
+  } catch (e) {
+    alert('Error renaming item')
+  }
+}
+
 const deleteItem = async (item) => {
   if (!confirm(`Are you sure you want to delete ${item.name}?`)) return
   
@@ -191,6 +216,7 @@ onMounted(() => {
           <div class="actions">
             <a v-if="item.type === 'file'" :href="getDownloadUrl(item)" target="_blank" download>⬇️</a>
             <button v-if="item.type === 'file' && canView(item.name)" @click="viewFile(item)">👁️</button>
+            <button @click="renameItem(item)" class="rename-btn" :disabled="currentPath === '/'">✏️</button>
             <button @click="deleteItem(item)" class="delete-btn" :disabled="currentPath === '/' && item.type === 'directory'">🗑️</button>
           </div>
         </li>
@@ -259,6 +285,11 @@ button:disabled {
 
 .delete-btn {
   background: #FF3B30;
+  padding: 4px 8px;
+}
+
+.rename-btn {
+  background: #FF9500;
   padding: 4px 8px;
 }
 
