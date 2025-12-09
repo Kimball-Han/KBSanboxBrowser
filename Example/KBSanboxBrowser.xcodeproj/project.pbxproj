@@ -212,7 +212,6 @@
 				TargetAttributes = {
 					607FACCF1AFB9204008FA782 = {
 						CreatedOnToolsVersion = 6.3.1;
-						DevelopmentTeam = QHVCP45D9K;
 						LastSwiftMigration = 0900;
 					};
 					607FACE41AFB9204008FA782 = {
@@ -482,7 +481,7 @@
 			baseConfigurationReference = 23B9D29D2907920F81E60FB0 /* Pods-KBSanboxBrowser_Example.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				DEVELOPMENT_TEAM = QHVCP45D9K;
+				DEVELOPMENT_TEAM = "";
 				INFOPLIST_FILE = KBSanboxBrowser/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
@@ -499,7 +498,7 @@
 			baseConfigurationReference = 55E8E0143783569D46C3677E /* Pods-KBSanboxBrowser_Example.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				DEVELOPMENT_TEAM = QHVCP45D9K;
+				DEVELOPMENT_TEAM = "";
 				INFOPLIST_FILE = KBSanboxBrowser/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
