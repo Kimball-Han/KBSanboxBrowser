@@ -292,8 +292,11 @@ public class KBSandboxBrowser {
         let fullPath = getAbsolutePath(for: path)
         
         var db: OpaquePointer?
-        guard sqlite3_open(fullPath, &db) == SQLITE_OK else {
-            return createJSONResponse(["error": "Could not open database"], statusCode: 500)
+        // Open in read-only mode to prevent creating empty files
+        guard sqlite3_open_v2(fullPath, &db, SQLITE_OPEN_READONLY, nil) == SQLITE_OK else {
+            let errorMsg = String(cString: sqlite3_errmsg(db))
+            sqlite3_close(db)
+            return createJSONResponse(["error": "Could not open database: \(errorMsg)"], statusCode: 500)
         }
         defer { sqlite3_close(db) }
         
@@ -329,7 +332,7 @@ public class KBSandboxBrowser {
                     value = sqlite3_column_double(statement, i)
                 case SQLITE_TEXT:
                     if let text = sqlite3_column_text(statement, i) {
-                        value = String(cString: text)
+                        value = String(cString: UnsafeRawPointer(text).assumingMemoryBound(to: CChar.self))
                     }
                 case SQLITE_BLOB:
                     value = "<BLOB>"
