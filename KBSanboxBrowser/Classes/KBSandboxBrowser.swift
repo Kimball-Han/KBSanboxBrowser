@@ -32,12 +32,39 @@ public class KBSandboxBrowser {
     }
     
     public var serverURL: URL? {
+        if let ip = getIPAddress() {
+            let port = webServer.port
+            return URL(string: "http://\(ip):\(port)/")
+        }
         return webServer.serverURL
     }
     
     public func stop() {
         webServer.stop()
         isRunning = false
+    }
+    
+    private func getIPAddress() -> String? {
+        var address: String?
+        var ifaddr: UnsafeMutablePointer<ifaddrs>?
+        if getifaddrs(&ifaddr) == 0 {
+            var ptr = ifaddr
+            while ptr != nil {
+                defer { ptr = ptr?.pointee.ifa_next }
+                let interface = ptr?.pointee
+                let addrFamily = interface?.ifa_addr.pointee.sa_family
+                if addrFamily == UInt8(AF_INET) || addrFamily == UInt8(AF_INET6) {
+                    let name = String(cString: (interface?.ifa_name)!)
+                    if name == "en0" {
+                        var hostname = [CChar](repeating: 0, count: Int(NI_MAXHOST))
+                        getnameinfo(interface?.ifa_addr, socklen_t((interface?.ifa_addr.pointee.sa_len)!), &hostname, socklen_t(hostname.count), nil, socklen_t(0), NI_NUMERICHOST)
+                        address = String(cString: hostname)
+                    }
+                }
+            }
+            freeifaddrs(ifaddr)
+        }
+        return address
     }
     
     private func setupHandlers() {
@@ -61,7 +88,7 @@ public class KBSandboxBrowser {
         webServer.addHandler(forMethod: "POST", path: "/api/delete", request: GCDWebServerURLEncodedFormRequest.self) { [weak self] request in
             guard let self = self else { return GCDWebServerResponse(statusCode: 500) }
             let formRequest = request as! GCDWebServerURLEncodedFormRequest
-            let path = formRequest.arguments["path"] as? String ?? ""
+            let path = formRequest.arguments["path"] ?? ""
             return self.handleDelete(path: path)
         }
         
@@ -69,8 +96,8 @@ public class KBSandboxBrowser {
         webServer.addHandler(forMethod: "POST", path: "/api/rename", request: GCDWebServerURLEncodedFormRequest.self) { [weak self] request in
             guard let self = self else { return GCDWebServerResponse(statusCode: 500) }
             let formRequest = request as! GCDWebServerURLEncodedFormRequest
-            let path = formRequest.arguments["path"] as? String ?? ""
-            let newName = formRequest.arguments["newName"] as? String ?? ""
+            let path = formRequest.arguments["path"] ?? ""
+            let newName = formRequest.arguments["newName"] ?? ""
             return self.handleRename(path: path, newName: newName)
         }
         
@@ -208,7 +235,7 @@ public class KBSandboxBrowser {
     }
     
     private func handleUpload(request: GCDWebServerMultiPartFormRequest) -> GCDWebServerResponse {
-        guard let file = request.files.first as? GCDWebServerMultiPartFile,
+        guard let file = request.files.first,
               let pathArgument = request.firstArgument(forControlName: "path"),
               let path = pathArgument.string else {
             return createJSONResponse(["error": "Invalid request"], statusCode: 400)
@@ -220,7 +247,7 @@ public class KBSandboxBrowser {
         }
         
         let fullDirPath = getAbsolutePath(for: path)
-        let fullFilePath = (fullDirPath as NSString).appendingPathComponent(file.fileName ?? "uploaded_file")
+        let fullFilePath = (fullDirPath as NSString).appendingPathComponent(file.fileName)
         
         do {
             if FileManager.default.fileExists(atPath: fullFilePath) {

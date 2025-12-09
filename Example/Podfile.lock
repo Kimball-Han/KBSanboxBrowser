@@ -7,9 +7,9 @@ PODS:
   - GCDWebServer/WebUploader (3.5.4):
     - GCDWebServer/Core
   - KBSanboxBrowser (0.1.0):
-    - GCDWebServer (~> 3.5)
-    - GCDWebServer/WebDAV (~> 3.5)
-    - GCDWebServer/WebUploader (~> 3.5)
+    - GCDWebServer
+    - GCDWebServer/WebDAV
+    - GCDWebServer/WebUploader
 
 DEPENDENCIES:
   - KBSanboxBrowser (from `../`)
@@ -24,7 +24,7 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   GCDWebServer: 2c156a56c8226e2d5c0c3f208a3621ccffbe3ce4
-  KBSanboxBrowser: 69ec6af9fd0bd3873d7ff3b3f164c39af2978d7a
+  KBSanboxBrowser: 861558382b4be4651721f6d00090cdcae9d0ab84
 
 PODFILE CHECKSUM: 5d78185ff3b6266abef3c5bcae951fce76c3e136
 

@@ -43,7 +43,7 @@ TODO: Add long description of the pod here.
   s.resource_bundles = {
     'KBSanboxBrowser' => ['KBSanboxBrowser/Assets/**/*', 'Sanbox-Browser/dist']
   }
-  s.swift_version = '5.9'
+  s.swift_version = '5.7'
   # s.public_header_files = 'Pod/Classes/**/*.h'
   # s.frameworks = 'UIKit', 'MapKit'
   s.dependency 'GCDWebServer', '~> 3.5'
