@@ -70,7 +70,18 @@ if let url = KBSandboxBrowser.shared.serverURL {
 KBSandboxBrowser.shared.stop()
 ```
 
-Don't forget to add `NSLocalNetworkUsageDescription` and `NSBonjourServices` (_http._tcp) to your `Info.plist` to allow local network access on iOS 14+.
+### Info.plist Configuration
+
+To allow local network access on iOS 14+, you must add the following keys to your `Info.plist`:
+
+```xml
+<key>NSLocalNetworkUsageDescription</key>
+<string>Allow access to local network to use the sandbox browser.</string>
+<key>NSBonjourServices</key>
+<array>
+    <string>_http._tcp</string>
+</array>
+```
 
 ## Author
 
