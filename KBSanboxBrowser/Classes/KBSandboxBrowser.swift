@@ -123,16 +123,20 @@ public class KBSandboxBrowser {
             let dataRequest = request as! GCDWebServerDataRequest
             
             var arguments: [String: String] = [:]
-            // Manually decode data to avoid GCDWebServer crash when Content-Type is not text/*
-            if let text = String(data: dataRequest.data, encoding: .utf8),
-               let components = URLComponents(string: "http://dummy.com/?" + text) {
+            // Use URLComponents to parse the query string safely from data
+            if let queryString = String(data: dataRequest.data, encoding: .utf8) {
+                var components = URLComponents()
+                components.percentEncodedQuery = queryString
                 components.queryItems?.forEach { item in
-                    arguments[item.name] = item.value
+                    if let value = item.value {
+                        arguments[item.name] = value
+                    }
                 }
             }
             
             let path = arguments["path"] ?? ""
             let sql = arguments["sql"] ?? ""
+            print("KBSandboxBrowser: Query DB path: \(path), sql: \(sql)")
             return self.handleQueryDB(path: path, sql: sql)
         }
     }
