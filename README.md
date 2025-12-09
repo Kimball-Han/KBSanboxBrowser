@@ -48,7 +48,7 @@ To run the example project, clone the repo, and run `pod install` from the Examp
 To install KBSanboxBrowser, simply add the following line to your Podfile:
 
 ```ruby
-pod 'KBSanboxBrowser', :git => 'https://github.com/Kimball-Han/KBSanboxBrowser.git'
+pod 'KBSanboxBrowser', :git => 'https://github.com/Kimball-Han/KBSanboxBrowser.git', configurations: ['Debug']
 ```
 
 ## Usage
