@@ -22,7 +22,7 @@ pod 'KBSanboxBrowser'
 
 ## Author
 
-kimball, jinbo.han@ipiaoniu.com
+kimball, bovvge@163.com
 
 ## License
 
