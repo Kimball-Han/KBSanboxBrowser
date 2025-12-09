@@ -30,8 +30,8 @@ KBSanboxBrowser is a powerful iOS sandbox file browser that allows you to manage
 ## Screenshots
 
 <p align="center">
-  <img src="./浏览器截屏1.png" width="45%" />
-  <img src="./浏览器截屏2.png" width="45%" />
+  <img src="./浏览器截屏2.png" />
+  <img src="./浏览器截屏1.png" />
 </p>
 
 ## Example
